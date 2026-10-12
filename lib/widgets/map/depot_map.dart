@@ -25,8 +25,14 @@ class DepotMap extends StatefulWidget {
   State<DepotMap> createState() => _DepotMapState();
 }
 
-class _DepotMapState extends State<DepotMap> {
+class _DepotMapState extends State<DepotMap>
+    with SingleTickerProviderStateMixin {
   final TransformationController _controller = TransformationController();
+  late final AnimationController _animController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  );
+  Animation<Matrix4>? _matrixAnimation;
 
   final GlobalKey _mapKey = GlobalKey();
   final GlobalKey _viewerKey = GlobalKey();
@@ -66,14 +72,11 @@ class _DepotMapState extends State<DepotMap> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _resetZoom();
-
+      if (!mounted) return;
       if (widget.selectedSection.isNotEmpty) {
-        Future.delayed(const Duration(milliseconds: 200), () {
-          if (mounted && widget.selectedSection.isNotEmpty) {
-            _zoomToSection();
-          }
-        });
+        _zoomToSection(animate: false);
+      } else {
+        _resetZoom(animate: false);
       }
     });
   }
@@ -83,14 +86,51 @@ class _DepotMapState extends State<DepotMap> {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.depot != widget.depot) {
-      _resetZoom();
+      if (widget.selectedSection.isNotEmpty) {
+        _zoomToSection(animate: false);
+      } else {
+        _resetZoom(animate: false);
+      }
     } else if (oldWidget.selectedSection != widget.selectedSection) {
       if (widget.selectedSection.isEmpty) {
-        _resetZoom();
+        _resetZoom(animate: true);
       } else {
-        _zoomToSection();
+        _zoomToSection(animate: true);
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _matrixAnimation?.removeListener(_onMatrixAnimTick);
+    _animController.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onMatrixAnimTick() {
+    if (_matrixAnimation != null) {
+      _controller.value = _matrixAnimation!.value;
+    }
+  }
+
+  void _animateToMatrix(Matrix4 targetMatrix) {
+    _matrixAnimation?.removeListener(_onMatrixAnimTick);
+    _animController.stop();
+
+    final currentMatrix = _controller.value;
+    if (currentMatrix == targetMatrix) return;
+
+    _matrixAnimation = Matrix4Tween(
+      begin: currentMatrix,
+      end: targetMatrix,
+    ).animate(CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _matrixAnimation!.addListener(_onMatrixAnimTick);
+    _animController.forward(from: 0.0);
   }
 
   double _depotWidth() {
@@ -115,7 +155,7 @@ class _DepotMapState extends State<DepotMap> {
     }
   }
 
-  void _resetZoom() {
+  void _resetZoom({bool animate = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -123,31 +163,53 @@ class _DepotMapState extends State<DepotMap> {
           _viewerKey.currentContext?.findRenderObject() as RenderBox?;
       final mapBox = _mapKey.currentContext?.findRenderObject() as RenderBox?;
 
-      if (viewerBox == null || mapBox == null) return;
+      if (viewerBox == null ||
+          mapBox == null ||
+          !viewerBox.hasSize ||
+          !mapBox.hasSize) {
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) _resetZoom(animate: animate);
+        });
+        return;
+      }
 
       final viewport = viewerBox.size;
       final mapSize = mapBox.size;
+      if (viewport.width <= 0 ||
+          viewport.height <= 0 ||
+          mapSize.width <= 0 ||
+          mapSize.height <= 0) {
+        return;
+      }
 
       final scale = math.min(
         viewport.width / mapSize.width,
         viewport.height / mapSize.height,
       );
 
-      final dx = (viewport.width - mapSize.width * scale) / 2;
-      final dy = (viewport.height - mapSize.height * scale) / 2;
+      final dx = (viewport.width - mapSize.width * scale) / 2.0;
+      final dy = (viewport.height - mapSize.height * scale) / 2.0;
 
-      _controller.value = Matrix4.identity()
-        ..translateByDouble(dx, dy, 0, 1)
-        ..scaleByDouble(scale, scale, scale, 1);
+      final targetMatrix = Matrix4.identity()
+        ..translate(dx, dy)
+        ..scale(scale);
+
+      if (animate) {
+        _animateToMatrix(targetMatrix);
+      } else {
+        _controller.value = targetMatrix;
+      }
     });
   }
 
-  void _zoomToSection() {
-    final center =
-        MapData.sectionCenters[widget.depot]?[widget.selectedSection];
-    final zoom = MapData.zoomLevels[widget.depot]?[widget.selectedSection];
+  void _zoomToSection({bool animate = true}) {
+    final bounds =
+        MapData.sectionBounds[widget.depot]?[widget.selectedSection];
 
-    if (center == null || zoom == null) return;
+    if (bounds == null) {
+      _resetZoom(animate: animate);
+      return;
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -156,27 +218,94 @@ class _DepotMapState extends State<DepotMap> {
           _viewerKey.currentContext?.findRenderObject() as RenderBox?;
       final mapBox = _mapKey.currentContext?.findRenderObject() as RenderBox?;
 
-      if (viewerBox == null || mapBox == null) return;
+      if (viewerBox == null ||
+          mapBox == null ||
+          !viewerBox.hasSize ||
+          !mapBox.hasSize) {
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) _zoomToSection(animate: animate);
+        });
+        return;
+      }
 
       final viewport = viewerBox.size;
       final mapSize = mapBox.size;
+      if (viewport.width <= 0 ||
+          viewport.height <= 0 ||
+          mapSize.width <= 0 ||
+          mapSize.height <= 0) {
+        return;
+      }
 
-      final targetX = center.x * mapSize.width;
-      final targetY = center.y * mapSize.height;
+      final overviewScale = math.min(
+        viewport.width / mapSize.width,
+        viewport.height / mapSize.height,
+      );
 
-      final tx = viewport.width / 2 - targetX * zoom;
-      final ty = viewport.height / 2 - targetY * zoom;
+      // Add proportional padding around section bounds
+      final padX = math.max(80.0, bounds.width * 0.18);
+      final padY = math.max(80.0, bounds.height * 0.22);
+      final paddedWidth = bounds.width + padX * 2.0;
+      final paddedHeight = bounds.height + padY * 2.0;
 
-      _controller.value = Matrix4.identity()
-        ..translateByDouble(tx, ty, 0, 1)
-        ..scaleByDouble(zoom, zoom, zoom, 1);
+      final scaleX = viewport.width / paddedWidth;
+      final scaleY = viewport.height / paddedHeight;
+      final fitScale = math.min(scaleX, scaleY);
+
+      // Clamp zoom factor so it fits nicely and doesn't over-magnify
+      final minZoom = overviewScale * 1.35;
+      final maxZoom = math.max(minZoom, math.min(2.2, overviewScale * 6.5));
+      final zoom = fitScale.clamp(minZoom, maxZoom);
+
+      final centerX = bounds.center.dx;
+      final centerY = bounds.center.dy;
+
+      final tx = viewport.width / 2.0 - centerX * zoom;
+      final ty = viewport.height / 2.0 - centerY * zoom;
+
+      final mapW = mapSize.width * zoom;
+      final mapH = mapSize.height * zoom;
+
+      final clampedTx = mapW > viewport.width
+          ? tx.clamp(viewport.width - mapW, 0.0)
+          : (viewport.width - mapW) / 2.0;
+      final clampedTy = mapH > viewport.height
+          ? ty.clamp(viewport.height - mapH, 0.0)
+          : (viewport.height - mapH) / 2.0;
+
+      final targetMatrix = Matrix4.identity()
+        ..translate(clampedTx, clampedTy)
+        ..scale(zoom);
+
+      if (animate) {
+        _animateToMatrix(targetMatrix);
+      } else {
+        _controller.value = targetMatrix;
+      }
     });
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Color _hexToColor(String hex) {
+    hex = hex.replaceAll('#', '');
+    if (hex.length == 6) {
+      hex = 'FF$hex';
+    }
+    return Color(int.parse(hex, radix: 16));
+  }
+
+  bool _isMarkerInSection(String markerId, String section) {
+    if (section.isEmpty) return true;
+    final id = markerId.toUpperCase();
+    final sec = section.toUpperCase();
+    if (sec == 'WP') {
+      return id.contains('WP') && !id.contains('MPPW') && !id.contains('UPLPW');
+    }
+    if (sec == 'PW') {
+      return id.contains('MPPW') ||
+          id.contains('UPLPW') ||
+          (id.contains('PW') && !id.contains('WP'));
+    }
+    return id.contains(sec);
   }
 
   @override
@@ -243,7 +372,9 @@ class _DepotMapState extends State<DepotMap> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "${widget.depot.toUpperCase()} – Depot Layout",
+                    widget.selectedSection.isNotEmpty
+                        ? "${widget.depot.toUpperCase()} – ${widget.selectedSection} Section"
+                        : "${widget.depot.toUpperCase()} – Depot Layout",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: isMobile ? 13 : 15,
@@ -254,7 +385,7 @@ class _DepotMapState extends State<DepotMap> {
                 ),
                 TextButton.icon(
                   onPressed: () {
-                    _resetZoom();
+                    _resetZoom(animate: true);
                     widget.onResetZoom?.call();
                   },
                   icon: Icon(Icons.refresh, color: theme.primaryColor, size: 16),
@@ -413,11 +544,21 @@ class _DepotMapState extends State<DepotMap> {
         ? WebsiteBayMarkers.miyapur
         : WebsiteBayMarkers.uppal;
 
+    final hasSection = widget.selectedSection.isNotEmpty;
+    final sectionHex =
+        MapData.sectionColors[widget.depot]?[widget.selectedSection];
+    final sectionColor = sectionHex != null ? _hexToColor(sectionHex) : null;
+
     final widgets = <Widget>[];
 
     for (final marker in markers) {
       final bay = bayProvider.findBayForMarker(marker.id);
       final isAllocated = bay != null && bay.isAllocated;
+
+      final isInSelected =
+          _isMarkerInSection(marker.id, widget.selectedSection);
+      final showHighlight = hasSection && isInSelected;
+      final showDimmed = hasSection && !isInSelected;
 
       final trackLeft = marker.x * scaleX;
       final trackTop = marker.y * scaleY;
@@ -440,96 +581,121 @@ class _DepotMapState extends State<DepotMap> {
           child: Transform.rotate(
             angle: angle,
             alignment: Alignment.topLeft,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // 1. If allocated, show green highlight fill (#28A745) matching SVG track
-                if (isAllocated)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF28A745).withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-
-                // 2. Train bogie overlay (scaled 2.2x height, vertically centered on track, exactly matching NxAMS)
-                if (isAllocated)
-                  Positioned(
-                    left: 0,
-                    top: -(trackHeight * 1.2) / 2,
-                    width: trackWidth,
-                    height: trackHeight * 2.2,
-                    child: IgnorePointer(
-                      child: Image.asset(
-                        'assets/maps/3 Boghi small High quality.png',
-                        fit: BoxFit.fill,
-                        errorBuilder: (context, error, stackTrace) => Image.asset(
-                          'assets/maps/train_bogie.png',
-                          fit: BoxFit.fill,
-                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // 3. Centered white badge with bold Trainset Name (NxAMS style)
-                if (isAllocated && trainName.isNotEmpty)
-                  Positioned.fill(
-                    child: Center(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 250),
+              opacity: showDimmed ? 0.30 : 1.0,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // 1. If allocated, show green highlight fill (#28A745) matching SVG track
+                  if (isAllocated)
+                    Positioned.fill(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 1,
-                        ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFF28A745).withValues(alpha: 0.85),
                           borderRadius: BorderRadius.circular(2),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 2,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
                         ),
-                        child: Text(
-                          trainName,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 9,
-                            decoration: TextDecoration.none,
+                      ),
+                    ),
+
+                  // 2. Train bogie overlay (scaled 2.2x height, vertically centered on track, exactly matching NxAMS)
+                  if (isAllocated)
+                    Positioned(
+                      left: 0,
+                      top: -(trackHeight * 1.2) / 2,
+                      width: trackWidth,
+                      height: trackHeight * 2.2,
+                      child: IgnorePointer(
+                        child: Image.asset(
+                          'assets/maps/3 Boghi small High quality.png',
+                          fit: BoxFit.fill,
+                          errorBuilder: (context, error, stackTrace) => Image.asset(
+                            'assets/maps/train_bogie.png',
+                            fit: BoxFit.fill,
+                            errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                           ),
                         ),
                       ),
                     ),
-                  ),
 
-                // 4. Interactive touch target & informative tooltip
-                Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AMSUpdatePopup(
-                          initialDepot: widget.depot,
-                          initialTrack: marker.id,
-                          existingBay: bay,
+                  // 3. Highlight outline for tracks in selected section
+                  if (showHighlight && sectionColor != null)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(2),
+                          border: Border.all(
+                            color: sectionColor,
+                            width: isAllocated ? 2.5 : 1.8,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: sectionColor.withValues(alpha: 0.45),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                    child: Tooltip(
-                      message: isAllocated
-                          ? '${marker.id}\nTrain: ${bay.trainSetName}\nStatus: ${bay.statusName}\nPurpose: ${bay.purposeName}'
-                          : '${marker.id} (Empty)',
-                      child: const SizedBox.expand(),
+                      ),
+                    ),
+
+                  // 4. Centered white badge with bold Trainset Name (NxAMS style)
+                  if (isAllocated && trainName.isNotEmpty)
+                    Positioned.fill(
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(2),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 2,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            trainName,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 9,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // 5. Interactive touch target & informative tooltip
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AMSUpdatePopup(
+                            initialDepot: widget.depot,
+                            initialTrack: marker.id,
+                            existingBay: bay,
+                          ),
+                        );
+                      },
+                      child: Tooltip(
+                        message: isAllocated
+                            ? '${marker.id}\nTrain: ${bay.trainSetName}\nStatus: ${bay.statusName}\nPurpose: ${bay.purposeName}'
+                            : '${marker.id} (Empty)',
+                        child: const SizedBox.expand(),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

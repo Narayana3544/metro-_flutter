@@ -8,7 +8,7 @@ Total Screen Files: **22** (All <= 280 lines, 100% strictly under limit)
 | 1 | `api_service.dart` | `services` | `-` | **1826** | Core Service Client |
 | 2 | `checklist_provider.dart` | `providers` | `-` | **1231** | Comprehensive State |
 | 3 | `ams_update_popup.dart` | `widgets` | `popups` | **1090** | Large Widget |
-| 4 | `depot_map.dart` | `widgets` | `map` | **541** | Large Widget |
+| 4 | `depot_map.dart` | `widgets` | `map` | **707** | Large Widget |
 | 5 | `trainset_table.dart` | `widgets` | `meter` | **475** | Widget (< 500) |
 | 6 | `allocation_popup.dart` | `widgets` | `popups` | **457** | Widget (< 500) |
 | 7 | `wheel_measurement_model.dart` | `models` | `-` | **404** | Optimal (< 300) |
@@ -17,8 +17,8 @@ Total Screen Files: **22** (All <= 280 lines, 100% strictly under limit)
 | 10 | `maintenance_bay_provider.dart` | `providers` | `-` | **319** | Comprehensive State |
 | 11 | `website_date_picker.dart` | `widgets` | `meter` | **315** | Widget (< 500) |
 | 12 | `trainset_row.dart` | `widgets` | `meter` | **312** | Widget (< 500) |
-| 13 | `ams_update_form_rows.dart` | `widgets` | `maintenance-bay` | **312** | Widget (< 500) |
-| 14 | `checklist_progress_header.dart` | `widgets` | `checklist` | **312** | Widget (< 500) |
+| 13 | `checklist_progress_header.dart` | `widgets` | `checklist` | **312** | Widget (< 500) |
+| 14 | `ams_update_form_rows.dart` | `widgets` | `maintenance-bay` | **312** | Widget (< 500) |
 | 15 | `checklist_item_controls.dart` | `widgets` | `checklist` | **311** | Widget (< 500) |
 | 16 | `ams_update_screen.dart` | `screens` | `maintenance-bay` | **299** | Optimal Screen (< 300) |
 | 17 | `wheel_form_widgets.dart` | `widgets` | `wheel_measurements` | **291** | Modular Widget (< 300) |
@@ -34,26 +34,26 @@ Total Screen Files: **22** (All <= 280 lines, 100% strictly under limit)
 | 27 | `wheel_measurement_form_screen.dart` | `screens` | `wheel_measurements` | **256** | Optimal Screen (< 300) |
 | 28 | `add_checklist_group_item_dialog.dart` | `widgets` | `checklist/dialogs` | **251** | Modular Widget (< 300) |
 | 29 | `history_widgets.dart` | `widgets` | `maintenance-bay` | **250** | Modular Widget (< 300) |
-| 30 | `wheel_history_widgets.dart` | `widgets` | `wheel_measurements` | **248** | Modular Widget (< 300) |
-| 31 | `profile_header_card.dart` | `widgets` | `profile` | **248** | Modular Widget (< 300) |
-| 32 | `ams_update_details_rows.dart` | `widgets` | `maintenance-bay` | **248** | Modular Widget (< 300) |
+| 30 | `profile_header_card.dart` | `widgets` | `profile` | **248** | Modular Widget (< 300) |
+| 31 | `ams_update_details_rows.dart` | `widgets` | `maintenance-bay` | **248** | Modular Widget (< 300) |
+| 32 | `wheel_history_widgets.dart` | `widgets` | `wheel_measurements` | **248** | Modular Widget (< 300) |
 | 33 | `config_checklist_filters.dart` | `widgets` | `checklist` | **242** | Modular Widget (< 300) |
 | 34 | `assign_train_popup.dart` | `widgets` | `popups` | **241** | Modular Widget (< 300) |
 | 35 | `checklist_item_card.dart` | `widgets` | `checklist` | **238** | Modular Widget (< 300) |
 | 36 | `forgot_password_screen.dart` | `screens` | `auth` | **234** | Optimal Screen (< 300) |
-| 37 | `wheel_tolerance_widgets.dart` | `widgets` | `wheel_measurements` | **231** | Modular Widget (< 300) |
-| 38 | `checksheet_detail_screen.dart` | `screens` | `CheckList` | **227** | Optimal Screen (< 300) |
-| 39 | `history_screen.dart` | `screens` | `maintenance-bay` | **227** | Optimal Screen (< 300) |
-| 40 | `work_order_card.dart` | `widgets` | `checklist` | **223** | Modular Widget (< 300) |
-| 41 | `login_provider.dart` | `providers` | `-` | **221** | Optimal Provider |
-| 42 | `sidebar_header.dart` | `widgets` | `sidebar` | **216** | Modular Widget (< 300) |
-| 43 | `edit_checklist_group_item_dialog.dart` | `widgets` | `checklist/dialogs` | **216** | Modular Widget (< 300) |
-| 44 | `edit_checklist_group_dialog.dart` | `widgets` | `checklist/dialogs` | **215** | Modular Widget (< 300) |
-| 45 | `custom_dropdown.dart` | `widgets` | `common` | **214** | Modular Widget (< 300) |
-| 46 | `notification_screen.dart` | `screens` | `notifications` | **213** | Optimal Screen (< 300) |
-| 47 | `bay_allocation_table.dart` | `widgets` | `map` | **210** | Modular Widget (< 300) |
-| 48 | `checklist_screen.dart` | `screens` | `CheckList` | **208** | Optimal Screen (< 300) |
-| 49 | `map_data.dart` | `constants` | `-` | **207** | Optimal (< 300) |
+| 37 | `map_data.dart` | `constants` | `-` | **232** | Optimal (< 300) |
+| 38 | `wheel_tolerance_widgets.dart` | `widgets` | `wheel_measurements` | **231** | Modular Widget (< 300) |
+| 39 | `checksheet_detail_screen.dart` | `screens` | `CheckList` | **227** | Optimal Screen (< 300) |
+| 40 | `history_screen.dart` | `screens` | `maintenance-bay` | **227** | Optimal Screen (< 300) |
+| 41 | `work_order_card.dart` | `widgets` | `checklist` | **223** | Modular Widget (< 300) |
+| 42 | `login_provider.dart` | `providers` | `-` | **221** | Optimal Provider |
+| 43 | `sidebar_header.dart` | `widgets` | `sidebar` | **216** | Modular Widget (< 300) |
+| 44 | `edit_checklist_group_item_dialog.dart` | `widgets` | `checklist/dialogs` | **216** | Modular Widget (< 300) |
+| 45 | `edit_checklist_group_dialog.dart` | `widgets` | `checklist/dialogs` | **215** | Modular Widget (< 300) |
+| 46 | `custom_dropdown.dart` | `widgets` | `common` | **214** | Modular Widget (< 300) |
+| 47 | `notification_screen.dart` | `screens` | `notifications` | **213** | Optimal Screen (< 300) |
+| 48 | `bay_allocation_table.dart` | `widgets` | `map` | **210** | Modular Widget (< 300) |
+| 49 | `checklist_screen.dart` | `screens` | `CheckList` | **208** | Optimal Screen (< 300) |
 | 50 | `meter_progress_card.dart` | `widgets` | `meter` | **202** | Modular Widget (< 300) |
 | 51 | `biometric_unlock_screen.dart` | `screens` | `auth` | **201** | Optimal Screen (< 300) |
 | 52 | `add_checklist_group_dialog.dart` | `widgets` | `checklist/dialogs` | **200** | Modular Widget (< 300) |
@@ -72,9 +72,9 @@ Total Screen Files: **22** (All <= 280 lines, 100% strictly under limit)
 | 65 | `checklist_card.dart` | `widgets` | `checklist` | **147** | Modular Widget (< 300) |
 | 66 | `profile_info_tiles.dart` | `widgets` | `profile` | **145** | Modular Widget (< 300) |
 | 67 | `wheel_measurement_history_screen.dart` | `screens` | `wheel_measurements` | **143** | Optimal Screen (< 300) |
-| 68 | `mfa_verification_screen.dart` | `screens` | `auth` | **140** | Optimal Screen (< 300) |
-| 69 | `checksheet_header_widgets.dart` | `widgets` | `checklist` | **140** | Modular Widget (< 300) |
-| 70 | `coming_soon_screen.dart` | `widgets` | `common` | **140** | Modular Widget (< 300) |
+| 68 | `coming_soon_screen.dart` | `widgets` | `common` | **140** | Modular Widget (< 300) |
+| 69 | `mfa_verification_screen.dart` | `screens` | `auth` | **140** | Optimal Screen (< 300) |
+| 70 | `checksheet_header_widgets.dart` | `widgets` | `checklist` | **140** | Modular Widget (< 300) |
 | 71 | `edit_profile_dialog.dart` | `widgets` | `profile` | **136** | Modular Widget (< 300) |
 | 72 | `custom_header.dart` | `widgets` | `common` | **136** | Modular Widget (< 300) |
 | 73 | `notification_filter_bar.dart` | `widgets` | `notifications` | **136** | Modular Widget (< 300) |
