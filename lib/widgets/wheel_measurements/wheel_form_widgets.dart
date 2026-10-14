@@ -41,19 +41,27 @@ class WheelFormHeaderBar extends StatelessWidget {
                       border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedTrainSet,
-                        isDense: true,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                        items: trainsets.map((ts) {
-                          return DropdownMenuItem<String>(value: ts, child: Text(ts));
-                        }).toList(),
-                        onChanged: onTrainSetChanged,
-                      ),
+                      child: () {
+                        final uniqueTrainsets = trainsets.toSet().toList();
+                        final effectiveValue = uniqueTrainsets.contains(selectedTrainSet)
+                            ? selectedTrainSet
+                            : (uniqueTrainsets.isNotEmpty ? uniqueTrainsets.first : null);
+
+                        return DropdownButton<String>(
+                          value: effectiveValue,
+                          isDense: true,
+                          isExpanded: true,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          items: uniqueTrainsets.map((ts) {
+                            return DropdownMenuItem<String>(value: ts, child: Text(ts));
+                          }).toList(),
+                          onChanged: onTrainSetChanged,
+                        );
+                      }(),
                     ),
                   ),
                 ),

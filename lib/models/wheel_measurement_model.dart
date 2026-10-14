@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// Tolerance limits and acceptance criteria from NxAMS specification
 class WheelTolerances {

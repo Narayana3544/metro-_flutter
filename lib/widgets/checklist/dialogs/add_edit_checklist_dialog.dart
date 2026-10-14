@@ -156,7 +156,6 @@ class _AddEditChecklistDialogState extends State<AddEditChecklistDialog> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final provider = context.watch<ChecklistProvider>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final categories = provider.categoryItems;
     final jobPlans = provider.jobPlanItems;

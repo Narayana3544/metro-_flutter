@@ -38,24 +38,33 @@ class AmsDropdownField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        DropdownButtonFormField<int>(
-          initialValue: options.any((o) => o.value == value) ? value : options.first.value,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+        () {
+          final seen = <int>{};
+          final uniqueOptions = options.where((o) => seen.add(o.value)).toList();
+          final effectiveValue = uniqueOptions.any((o) => o.value == value)
+              ? value
+              : (uniqueOptions.isNotEmpty ? uniqueOptions.first.value : null);
+
+          return DropdownButtonFormField<int>(
+            key: ValueKey('${label}_${uniqueOptions.length}_$effectiveValue'),
+            value: effectiveValue,
+            isExpanded: true,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                ),
               ),
             ),
-          ),
-          items: options.map((opt) {
-            return DropdownMenuItem<int>(
-              value: opt.value,
+            items: uniqueOptions.map((opt) {
+              return DropdownMenuItem<int>(
+                value: opt.value,
               child: Text(
                 opt.label,
                 style: TextStyle(
@@ -68,7 +77,8 @@ class AmsDropdownField extends StatelessWidget {
             );
           }).toList(),
           onChanged: onChanged,
-        ),
+        );
+      }(),
       ],
     );
   }
@@ -192,7 +202,9 @@ class AMSUpdateDepotBayRow extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
-              initialValue: depot,
+              key: ValueKey('depot_$depot'),
+              value: (depot == 'Uppal' || depot == 'Miyapur' || depot == 'Select Depot') ? depot : 'Select Depot',
+              isExpanded: true,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 border: OutlineInputBorder(
@@ -207,6 +219,7 @@ class AMSUpdateDepotBayRow extends StatelessWidget {
                 ),
               ),
               items: const [
+                DropdownMenuItem(value: 'Select Depot', child: Text('Select Depot')),
                 DropdownMenuItem(value: 'Uppal', child: Text('UPPAL')),
                 DropdownMenuItem(value: 'Miyapur', child: Text('MIYAPUR')),
               ],
@@ -229,34 +242,50 @@ class AMSUpdateDepotBayRow extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            DropdownButtonFormField<String>(
-              key: ValueKey('track_${depot}_${bayOptions.length}'),
-              initialValue: bayOptions.contains(track) ? track : null,
-              hint: const Text('Select Bay / Track', style: TextStyle(fontSize: 13)),
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+            () {
+              final uniqueBays = bayOptions.toSet().toList();
+              final effectiveTrack = uniqueBays.contains(track) ? track : null;
+
+              return DropdownButtonFormField<String>(
+                key: ValueKey('track_${depot}_${uniqueBays.length}_$effectiveTrack'),
+                value: effectiveTrack,
+                isExpanded: true,
+                hint: Text(
+                  depot == 'Select Depot'
+                      ? 'Please Select Depot First'
+                      : 'Select Bay / Track',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                   ),
                 ),
-              ),
-              items: bayOptions.map((opt) {
-                final b = findBay(opt);
-                final isAlloc = b != null && b.isAllocated;
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                    ),
+                  ),
+                ),
+                items: uniqueBays.map((opt) {
+                  final b = findBay(opt);
+                  final isAlloc = b != null && b.isAllocated;
                 return DropdownMenuItem<String>(
                   value: opt,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        opt,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      Expanded(
+                        child: Text(
+                          opt,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Container(
@@ -285,7 +314,8 @@ class AMSUpdateDepotBayRow extends StatelessWidget {
               onChanged: (val) {
                 if (val != null) onTrackChanged(val);
               },
-            ),
+            );
+          }(),
           ],
         );
 

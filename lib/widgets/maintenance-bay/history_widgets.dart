@@ -40,6 +40,10 @@ class HistoryFilterBar extends StatelessWidget {
     final slotMatches = sortedSlotEntries.any((e) => e.key == slot);
     final trainMatches = trainMap.containsKey(trainSet);
 
+    final normalizedDepot = (depot == '9373' || depot == '633')
+        ? depot
+        : (depot.toUpperCase().contains('MIYAPUR') ? '9373' : '633');
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -50,8 +54,9 @@ class HistoryFilterBar extends StatelessWidget {
             SizedBox(
               width: 180,
               child: DropdownButtonFormField<String>(
-                key: ValueKey('depot_$depot'),
-                initialValue: depot.isEmpty ? '633' : depot,
+                key: ValueKey('depot_$normalizedDepot'),
+                value: normalizedDepot,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Depot',
                   border: OutlineInputBorder(),
@@ -74,8 +79,9 @@ class HistoryFilterBar extends StatelessWidget {
             SizedBox(
               width: 220,
               child: DropdownButtonFormField<String>(
-                key: ValueKey('bay_${depot}_${sortedSlotEntries.length}'),
-                initialValue: slotMatches ? slot : '',
+                key: ValueKey('bay_${depot}_${sortedSlotEntries.length}_$slot'),
+                value: slotMatches ? slot : '',
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Bay',
                   border: OutlineInputBorder(),
@@ -85,12 +91,14 @@ class HistoryFilterBar extends StatelessWidget {
                     value: '',
                     child: Text('All'),
                   ),
-                  ...sortedSlotEntries.map(
-                    (entry) => DropdownMenuItem(
-                      value: entry.key,
-                      child: Text(entry.value),
-                    ),
-                  ),
+                  ...sortedSlotEntries
+                      .where((entry) => entry.key.isNotEmpty)
+                      .map(
+                        (entry) => DropdownMenuItem(
+                          value: entry.key,
+                          child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                        ),
+                      ),
                 ],
                 onChanged: onSlotChanged,
               ),
@@ -98,8 +106,9 @@ class HistoryFilterBar extends StatelessWidget {
             SizedBox(
               width: 220,
               child: DropdownButtonFormField<String>(
-                key: ValueKey('train_${trainMap.length}'),
-                initialValue: trainMatches ? trainSet : '',
+                key: ValueKey('train_${trainMap.length}_$trainSet'),
+                value: trainMatches ? trainSet : '',
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Trainset',
                   border: OutlineInputBorder(),
@@ -109,12 +118,14 @@ class HistoryFilterBar extends StatelessWidget {
                     value: '',
                     child: Text('All'),
                   ),
-                  ...trainMap.entries.map(
-                    (entry) => DropdownMenuItem(
-                      value: entry.key,
-                      child: Text(entry.value),
-                    ),
-                  ),
+                  ...trainMap.entries
+                      .where((entry) => entry.key.isNotEmpty)
+                      .map(
+                        (entry) => DropdownMenuItem(
+                          value: entry.key,
+                          child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                        ),
+                      ),
                 ],
                 onChanged: onTrainChanged,
               ),

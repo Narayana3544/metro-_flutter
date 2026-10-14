@@ -36,13 +36,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
+    _applyInitialDepot();
+    _loadOptions();
+  }
+
+  void _applyInitialDepot() {
     final initialUpper = widget.initialDepot.toUpperCase();
     if (initialUpper.contains('MIYAPUR') || initialUpper == '9373') {
       depot = '9373';
     } else {
       depot = '633'; // Default to UPPAL (matches NxAMS allocation-history.component.ts)
     }
-    _loadOptions();
+  }
+
+  @override
+  void didUpdateWidget(covariant HistoryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialDepot.isNotEmpty && widget.initialDepot != oldWidget.initialDepot) {
+      final initialUpper = widget.initialDepot.toUpperCase();
+      final newDepot = (initialUpper.contains('MIYAPUR') || initialUpper == '9373') ? '9373' : '633';
+      if (newDepot != depot) {
+        _selectDepot(newDepot);
+      }
+    }
   }
 
   Future<void> _loadOptions() async {
@@ -61,6 +77,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       if (depot.isNotEmpty) {
         bays = await _api.getMaintenanceBay(int.parse(depot));
       }
+      await _search();
     } catch (e) {
       error = e.toString();
     } finally {
@@ -77,6 +94,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
     try {
       bays = await _api.getMaintenanceBay(int.parse(value));
+      await _search();
     } catch (e) {
       if (mounted) setState(() => error = e.toString());
     } finally {

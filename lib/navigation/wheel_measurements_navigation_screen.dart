@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../utils/scaffold_keys.dart';
 import 'app_sidebar.dart';
 import '../screens/wheel_measurements/wheel_measurement_form_screen.dart';
 import '../screens/wheel_measurements/wheel_measurement_history_screen.dart';
@@ -29,7 +28,6 @@ class _WheelMeasurementsNavigationScreenState
     final theme = Theme.of(context);
 
     return Scaffold(
-      key: AppScaffoldKeys.wheelKey,
       drawer: const AppSidebar(currentModule: 'wheel_measurements'),
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(

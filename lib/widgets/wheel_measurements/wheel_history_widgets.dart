@@ -43,24 +43,34 @@ class WheelMeasurementFilterBar extends StatelessWidget {
                 border: Border.all(color: Colors.grey.shade400),
               ),
               child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedTrainSet == '0' ? 'All Trainsets' : selectedTrainSet,
-                  isExpanded: true,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  items: trainsets.map((ts) {
-                    return DropdownMenuItem<String>(
-                      value: ts,
-                      child: Text(ts),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) onTrainSetChanged(val);
-                  },
-                ),
+                child: () {
+                  final uniqueTrainsets = trainsets.toSet().toList();
+                  final target = selectedTrainSet == '0' ? 'All Trainsets' : selectedTrainSet;
+                  final effectiveValue = uniqueTrainsets.contains(target)
+                      ? target
+                      : (uniqueTrainsets.contains('All Trainsets')
+                          ? 'All Trainsets'
+                          : (uniqueTrainsets.isNotEmpty ? uniqueTrainsets.first : null));
+
+                  return DropdownButton<String>(
+                    value: effectiveValue,
+                    isExpanded: true,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    items: uniqueTrainsets.map((ts) {
+                      return DropdownMenuItem<String>(
+                        value: ts,
+                        child: Text(ts),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) onTrainSetChanged(val);
+                    },
+                  );
+                }(),
               ),
             ),
           ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../models/train_model.dart';
 import '../../models/wheel_measurement_model.dart';
+import '../../providers/login_provider.dart';
+import '../../providers/train_provider.dart';
 import '../../services/api_service.dart';
-import '../../utils/scaffold_keys.dart';
 import '../../widgets/common/custom_header.dart';
 import '../../widgets/wheel_measurements/wheel_axle_card.dart';
 import '../../widgets/wheel_measurements/wheel_form_widgets.dart';
@@ -18,17 +21,13 @@ class _WheelMeasurementFormScreenState
     extends State<WheelMeasurementFormScreen> with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
 
-  String _selectedTrainSet = 'TS-01';
+  String _selectedTrainSet = 'TS001';
   final TextEditingController _kmReadingController = TextEditingController(text: '125430');
   final TextEditingController _remarksController = TextEditingController();
 
   late TabController _carTabController;
   int _activeCarIndex = 0;
   bool _isSaving = false;
-
-  final List<String> _trainsets = [
-    for (int i = 1; i <= 57; i++) 'TS-${i.toString().padLeft(2, '0')}',
-  ];
 
   late List<CarItem> _carsData;
 
@@ -42,6 +41,17 @@ class _WheelMeasurementFormScreenState
           _activeCarIndex = _carTabController.index;
         });
       }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final login = context.read<LoginProvider>();
+      final ld = login.loginData;
+      final roleId = login.selectedRoleId ?? ld?.roleIds.split(',').first.trim() ?? '1';
+      context.read<TrainProvider>().fetchTrainSets(
+        token: ld?.token,
+        userSession: ld?.encodedUserSession,
+        roleId: roleId,
+      );
     });
 
     _initializeDefaultCarHierarchy();
@@ -117,7 +127,15 @@ class _WheelMeasurementFormScreenState
     setState(() => _isSaving = true);
 
     final kmVal = double.tryParse(_kmReadingController.text.trim()) ?? 0.0;
-    final tsId = int.tryParse(_selectedTrainSet.replaceFirst('TS-', '')) ?? 1;
+    final trainProvider = Provider.of<TrainProvider>(context, listen: false);
+    final matchingTrain = trainProvider.trainSets.firstWhere(
+      (t) => t.no == _selectedTrainSet,
+      orElse: () => TrainModel(
+        id: int.tryParse(_selectedTrainSet.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1,
+        no: _selectedTrainSet,
+      ),
+    );
+    final tsId = matchingTrain.id;
 
     final data = WheelMeasurementData(
       woId: 0,
@@ -194,13 +212,24 @@ class _WheelMeasurementFormScreenState
     final isDark = theme.brightness == Brightness.dark;
     final activeCar = _carsData[_activeCarIndex];
 
+    final trainProvider = context.watch<TrainProvider>();
+    final List<String> trainsets = trainProvider.trainSets.isNotEmpty
+        ? trainProvider.trainSets
+            .map((t) => t.no.isNotEmpty ? t.no : 'TS-${t.id}')
+            .toSet()
+            .toList()
+        : [for (int i = 1; i <= 57; i++) 'TS${i.toString().padLeft(3, '0')}'];
+
+    final effectiveTrainSet = trainsets.contains(_selectedTrainSet)
+        ? _selectedTrainSet
+        : (trainsets.isNotEmpty ? trainsets.first : 'TS001');
+
     return Scaffold(
       body: Column(
         children: [
           CustomHeader(
             title: "WHEEL MEASUREMENT",
             subtitle: "Digital Field Entry • No More Notebooks",
-            onMenuPressed: () => AppScaffoldKeys.wheelKey.currentState?.openDrawer(),
             actions: [
               IconButton(
                 icon: const Icon(Icons.help_outline),
@@ -210,8 +239,8 @@ class _WheelMeasurementFormScreenState
             ],
           ),
           WheelFormHeaderBar(
-            selectedTrainSet: _selectedTrainSet,
-            trainsets: _trainsets,
+            selectedTrainSet: effectiveTrainSet,
+            trainsets: trainsets,
             kmReadingController: _kmReadingController,
             isDark: isDark,
             onTrainSetChanged: (val) {

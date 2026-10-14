@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/wheel_measurement_model.dart';
+import '../../providers/login_provider.dart';
+import '../../providers/train_provider.dart';
 import '../../services/api_service.dart';
-import '../../utils/scaffold_keys.dart';
 import '../../widgets/common/custom_header.dart';
 import '../../widgets/wheel_measurements/wheel_history_widgets.dart';
 
@@ -22,14 +24,19 @@ class _WheelMeasurementHistoryScreenState
   List<WheelMeasurementListItem> _records = [];
   String? _errorMessage;
 
-  final List<String> _trainsets = [
-    'All Trainsets',
-    for (int i = 1; i <= 57; i++) 'TS-${i.toString().padLeft(2, '0')}',
-  ];
-
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final login = context.read<LoginProvider>();
+      final ld = login.loginData;
+      final roleId = login.selectedRoleId ?? ld?.roleIds.split(',').first.trim() ?? '1';
+      context.read<TrainProvider>().fetchTrainSets(
+        token: ld?.token,
+        userSession: ld?.encodedUserSession,
+        roleId: roleId,
+      );
+    });
     _fetchRecords();
   }
 
@@ -40,9 +47,17 @@ class _WheelMeasurementHistoryScreenState
     });
 
     try {
-      final tsParam = _selectedTrainSet == 'All Trainsets' || _selectedTrainSet == '0'
-          ? '0'
-          : _selectedTrainSet.replaceFirst('TS-', '');
+      String tsParam = '0';
+      if (_selectedTrainSet != 'All Trainsets' && _selectedTrainSet != '0' && _selectedTrainSet.isNotEmpty) {
+        final trainProvider = Provider.of<TrainProvider>(context, listen: false);
+        final match = trainProvider.trainSets.where((t) => t.no == _selectedTrainSet);
+        if (match.isNotEmpty && match.first.id > 0) {
+          tsParam = match.first.id.toString();
+        } else {
+          tsParam = _selectedTrainSet.replaceAll(RegExp(r'[^0-9]'), '');
+          if (tsParam.isEmpty) tsParam = _selectedTrainSet;
+        }
+      }
       final list = await _apiService.getWheelMeasurementsList(trainSet: tsParam);
       setState(() {
         _records = list;
@@ -85,6 +100,17 @@ class _WheelMeasurementHistoryScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final trainProvider = context.watch<TrainProvider>();
+
+    final List<String> trainsets = <String>{
+      'All Trainsets',
+      if (trainProvider.trainSets.isNotEmpty)
+        ...trainProvider.trainSets
+            .map((t) => t.no.isNotEmpty ? t.no : 'TS-${t.id}')
+            .where((s) => s.isNotEmpty)
+      else
+        for (int i = 1; i <= 57; i++) 'TS${i.toString().padLeft(3, '0')}',
+    }.toList();
 
     return ColoredBox(
       color: theme.colorScheme.surface,
@@ -93,7 +119,6 @@ class _WheelMeasurementHistoryScreenState
           CustomHeader(
             title: "WHEEL HISTORY",
             subtitle: "Historical Records & Profiling Data",
-            onMenuPressed: () => AppScaffoldKeys.wheelKey.currentState?.openDrawer(),
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
@@ -104,7 +129,7 @@ class _WheelMeasurementHistoryScreenState
           ),
           WheelMeasurementFilterBar(
             selectedTrainSet: _selectedTrainSet,
-            trainsets: _trainsets,
+            trainsets: trainsets,
             isDark: isDark,
             onTrainSetChanged: (val) {
               setState(() => _selectedTrainSet = val);

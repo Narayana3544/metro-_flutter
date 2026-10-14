@@ -167,6 +167,12 @@ class ConfigChecklistFilters extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final seen = <String>{};
+    final safeItems = items.where((it) => it.value != null && seen.add(it.value!)).toList();
+    final effectiveValue = safeItems.any((it) => it.value == value)
+        ? value
+        : (safeItems.isNotEmpty ? safeItems.first.value : null);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -186,10 +192,10 @@ class ConfigChecklistFilters extends StatelessWidget {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
-              value: value,
+              value: effectiveValue,
               icon: Icon(Icons.arrow_drop_down, color: colors.onSurfaceVariant),
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: colors.onSurface),
-              items: items,
+              items: safeItems,
               onChanged: onChanged,
             ),
           ),

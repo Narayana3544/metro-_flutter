@@ -14,7 +14,7 @@ const List<SidebarModule> sidebarModules = [
     subtitle: 'Manage train allocation in depot bays',
     icon: Icons.train_rounded,
     color: Colors.blue,
-    page: MaintenanceBayNavigationScreen(),
+    pageBuilder: MaintenanceBayNavigationScreen.new,
   ),
   SidebarModule(
     id: 'wheel_measurements',
@@ -22,7 +22,7 @@ const List<SidebarModule> sidebarModules = [
     subtitle: 'Digital Wheel Gauge & Profiling',
     icon: Icons.radio_button_checked,
     color: Colors.indigo,
-    page: WheelMeasurementsNavigationScreen(),
+    pageBuilder: WheelMeasurementsNavigationScreen.new,
   ),
   SidebarModule(
     id: 'meter',
@@ -30,7 +30,7 @@ const List<SidebarModule> sidebarModules = [
     subtitle: 'Energy Monitoring',
     icon: Icons.electric_meter,
     color: Colors.teal,
-    page: MeterNavigationScreen(),
+    pageBuilder: MeterNavigationScreen.new,
   ),
   SidebarModule(
     id: 'checklist',
@@ -38,6 +38,6 @@ const List<SidebarModule> sidebarModules = [
     subtitle: 'Config Maintenance & Checksheets',
     icon: Icons.fact_check,
     color: Colors.deepOrange,
-    page: ChecklistNavigationScreen(),
+    pageBuilder: ChecklistNavigationScreen.new,
   ),
 ];

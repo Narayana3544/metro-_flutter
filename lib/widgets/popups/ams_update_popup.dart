@@ -474,35 +474,44 @@ class _AMSUpdatePopupState extends State<AMSUpdatePopup> {
     final purposeProvider = context.watch<MaintenancePurposeProvider>();
 
     // Build Train Set Options
+    final seenTs = <int>{0};
     trainSetOptions = [
       const DropdownOption(value: 0, label: 'Select Train Set'),
-      ...trainProvider.trainSets.map(
-        (t) => DropdownOption(value: t.id, label: t.no),
-      ),
     ];
-    if (selectedTrainSet > 0 && !trainSetOptions.any((o) => o.value == selectedTrainSet)) {
+    for (final t in trainProvider.trainSets) {
+      if (t.id > 0 && seenTs.add(t.id)) {
+        trainSetOptions.add(DropdownOption(value: t.id, label: t.no.isNotEmpty ? t.no : 'TS-${t.id}'));
+      }
+    }
+    if (selectedTrainSet > 0 && seenTs.add(selectedTrainSet)) {
       trainSetOptions.add(DropdownOption(value: selectedTrainSet, label: 'TS-$selectedTrainSet'));
     }
 
     // Build Status Options
+    final seenSt = <int>{0};
     statusOptions = [
       const DropdownOption(value: 0, label: 'Select Status'),
-      ...statusProvider.statuses.map(
-        (s) => DropdownOption(value: s.id, label: s.name),
-      ),
     ];
-    if (selectedStatus > 0 && !statusOptions.any((o) => o.value == selectedStatus)) {
+    for (final s in statusProvider.statuses) {
+      if (s.id > 0 && seenSt.add(s.id)) {
+        statusOptions.add(DropdownOption(value: s.id, label: s.name.isNotEmpty ? s.name : 'Status ${s.id}'));
+      }
+    }
+    if (selectedStatus > 0 && seenSt.add(selectedStatus)) {
       statusOptions.add(DropdownOption(value: selectedStatus, label: 'Status $selectedStatus'));
     }
 
     // Build Purpose Options
+    final seenPr = <int>{0};
     purposeOptions = [
       const DropdownOption(value: 0, label: 'Select Purpose'),
-      ...purposeProvider.purposes.map(
-        (p) => DropdownOption(value: p.id, label: p.name),
-      ),
     ];
-    if (selectedPurpose > 0 && !purposeOptions.any((o) => o.value == selectedPurpose)) {
+    for (final p in purposeProvider.purposes) {
+      if (p.id > 0 && seenPr.add(p.id)) {
+        purposeOptions.add(DropdownOption(value: p.id, label: p.name.isNotEmpty ? p.name : 'Purpose ${p.id}'));
+      }
+    }
+    if (selectedPurpose > 0 && seenPr.add(selectedPurpose)) {
       purposeOptions.add(DropdownOption(value: selectedPurpose, label: 'Purpose $selectedPurpose'));
     }
 
@@ -846,6 +855,12 @@ class _AMSUpdatePopupState extends State<AMSUpdatePopup> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final seen = <int>{};
+    final uniqueOptions = options.where((o) => seen.add(o.value)).toList();
+    final effectiveValue = uniqueOptions.any((o) => o.value == value)
+        ? value
+        : (uniqueOptions.isNotEmpty ? uniqueOptions.first.value : null);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -859,7 +874,9 @@ class _AMSUpdatePopupState extends State<AMSUpdatePopup> {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<int>(
-          initialValue: options.any((o) => o.value == value) ? value : options.first.value,
+          key: ValueKey('${label}_${uniqueOptions.length}_$effectiveValue'),
+          value: effectiveValue,
+          isExpanded: true,
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
@@ -873,7 +890,7 @@ class _AMSUpdatePopupState extends State<AMSUpdatePopup> {
               ),
             ),
           ),
-          items: options.map((opt) {
+          items: uniqueOptions.map((opt) {
             return DropdownMenuItem<int>(
               value: opt.value,
               child: Text(

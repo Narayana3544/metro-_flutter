@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../utils/scaffold_keys.dart';
 import 'app_sidebar.dart';
 
 import '../screens/CheckList/work_orders_screen.dart';
@@ -31,7 +30,6 @@ class _ChecklistNavigationScreenState extends State<ChecklistNavigationScreen> {
     ];
 
     return Scaffold(
-      key: AppScaffoldKeys.checklistKey,
       drawer: const AppSidebar(currentModule: 'checklist'),
       body: screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(

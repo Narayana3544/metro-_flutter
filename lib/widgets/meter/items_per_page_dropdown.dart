@@ -23,23 +23,21 @@ class ItemsPerPageDropdown extends StatelessWidget {
         const SizedBox(width: 6),
 
         DropdownButtonHideUnderline(
-          child: DropdownButton<int>(
-            value: value,
-            borderRadius: BorderRadius.circular(10),
-            isDense: true,
-            items: const [
-              DropdownMenuItem(value: 10, child: Text("10")),
-              DropdownMenuItem(value: 20, child: Text("20")),
-              DropdownMenuItem(value: 50, child: Text("50")),
-              DropdownMenuItem(value: 75, child: Text("75")),
-              DropdownMenuItem(value: 100, child: Text("100")),
-            ],
-            onChanged: (newValue) {
-              if (newValue != null) {
-                onChanged(newValue);
-              }
-            },
-          ),
+          child: () {
+            const allowed = [10, 20, 50, 75, 100];
+            final effectiveValue = allowed.contains(value) ? value : allowed.first;
+            return DropdownButton<int>(
+              value: effectiveValue,
+              borderRadius: BorderRadius.circular(10),
+              isDense: true,
+              items: allowed.map((v) => DropdownMenuItem(value: v, child: Text("$v"))).toList(),
+              onChanged: (newValue) {
+                if (newValue != null) {
+                  onChanged(newValue);
+                }
+              },
+            );
+          }(),
         ),
       ],
     );

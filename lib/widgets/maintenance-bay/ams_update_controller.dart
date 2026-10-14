@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../constants/website_bay_markers.dart';
+import '../../models/maintenance_purpose_model.dart';
+import '../../models/status_model.dart';
+import '../../models/train_model.dart';
 import '../../providers/active_trains_provider.dart';
 import '../../providers/maintenance_bay_provider.dart';
 import 'ams_update_form_rows.dart';
@@ -49,39 +52,63 @@ class AmsUpdateService {
   }
 
   static List<DropdownOption> buildTrainSetOptions(List<dynamic> trainSets, int selectedTrainSet) {
-    final list = [
+    final seen = <int>{0};
+    final list = <DropdownOption>[
       const DropdownOption(value: 0, label: 'Select Train Set'),
-      ...trainSets.map((t) => DropdownOption(value: t.id as int, label: t.no as String)),
     ];
-    if (selectedTrainSet > 0 && !list.any((o) => o.value == selectedTrainSet)) {
+    for (final t in trainSets) {
+      final id = (t is TrainModel) ? t.id : (int.tryParse('${t.id}') ?? 0);
+      final no = (t is TrainModel) ? t.no : '${t.no}';
+      if (id > 0 && seen.add(id)) {
+        list.add(DropdownOption(value: id, label: no.isNotEmpty ? no : 'TS-$id'));
+      }
+    }
+    if (selectedTrainSet > 0 && seen.add(selectedTrainSet)) {
       list.add(DropdownOption(value: selectedTrainSet, label: 'TS-$selectedTrainSet'));
     }
     return list;
   }
 
   static List<DropdownOption> buildStatusOptions(List<dynamic> statuses, int selectedStatus) {
-    final list = [
+    final seen = <int>{0};
+    final list = <DropdownOption>[
       const DropdownOption(value: 0, label: 'Select Status'),
-      ...statuses.map((s) => DropdownOption(value: s.id as int, label: s.name as String)),
     ];
-    if (selectedStatus > 0 && !list.any((o) => o.value == selectedStatus)) {
+    for (final s in statuses) {
+      final id = (s is StatusModel) ? s.id : (int.tryParse('${s.id}') ?? 0);
+      final name = (s is StatusModel) ? s.name : '${s.name}';
+      if (id > 0 && seen.add(id)) {
+        list.add(DropdownOption(value: id, label: name.isNotEmpty ? name : 'Status $id'));
+      }
+    }
+    if (selectedStatus > 0 && seen.add(selectedStatus)) {
       list.add(DropdownOption(value: selectedStatus, label: 'Status $selectedStatus'));
     }
     return list;
   }
 
   static List<DropdownOption> buildPurposeOptions(List<dynamic> purposes, int selectedPurpose) {
-    final list = [
+    final seen = <int>{0};
+    final list = <DropdownOption>[
       const DropdownOption(value: 0, label: 'Select Purpose'),
-      ...purposes.map((p) => DropdownOption(value: p.id as int, label: p.name as String)),
     ];
-    if (selectedPurpose > 0 && !list.any((o) => o.value == selectedPurpose)) {
+    for (final p in purposes) {
+      final id = (p is MaintenancePurposeModel) ? p.id : (int.tryParse('${p.id}') ?? 0);
+      final name = (p is MaintenancePurposeModel) ? p.name : '${p.name}';
+      if (id > 0 && seen.add(id)) {
+        list.add(DropdownOption(value: id, label: name.isNotEmpty ? name : 'Purpose $id'));
+      }
+    }
+    if (selectedPurpose > 0 && seen.add(selectedPurpose)) {
       list.add(DropdownOption(value: selectedPurpose, label: 'Purpose $selectedPurpose'));
     }
     return list;
   }
 
   static List<String> buildBayOptions(String depot, MaintenanceBayProvider bayProvider) {
+    if (depot.isEmpty || depot == 'Select Depot') {
+      return const [];
+    }
     final markers = (depot.toUpperCase() == 'MIYAPUR') ? WebsiteBayMarkers.miyapur : WebsiteBayMarkers.uppal;
     final options = <String>[];
     for (final id in markers.map((m) => m.id)) {

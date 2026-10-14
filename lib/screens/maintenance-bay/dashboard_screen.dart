@@ -10,10 +10,11 @@ import '../../widgets/map/bay_allocation_table.dart';
 import '../../providers/maintenance_bay_provider.dart';
 import '../../providers/train_provider.dart';
 import '../../providers/login_provider.dart';
-import 'history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final void Function(String depot)? onNavigateToHistory;
+
+  const DashboardScreen({super.key, this.onNavigateToHistory});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -134,55 +135,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         },
                       );
 
-                      final actionButtons = isDepotSelected
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                OutlinedButton.icon(
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                  onPressed: () =>
-                                      _showViewTableDialog(context, bayProvider),
-                                  icon: const Icon(Icons.table_chart, size: 18),
-                                  label: const Text("View Table"),
+                      final actionButtons = Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isDepotSelected) ...[
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
                                 ),
-                                const SizedBox(width: 8),
-                                FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => HistoryScreen(
-                                          initialDepot: selectedDepot,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.history, size: 18),
-                                  label: const Text('History'),
-                                ),
-                              ],
-                            )
-                          : const SizedBox.shrink();
+                              ),
+                              onPressed: () =>
+                                  _showViewTableDialog(context, bayProvider),
+                              icon: const Icon(Icons.table_chart, size: 18),
+                              label: const Text("View Table"),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                            ),
+                            onPressed: () {
+                              widget.onNavigateToHistory?.call(selectedDepot);
+                            },
+                            icon: const Icon(Icons.history, size: 18),
+                            label: const Text('History'),
+                          ),
+                        ],
+                      );
 
                       if (isNarrow) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             depotDropdown,
-                            if (isDepotSelected) ...[
-                              const SizedBox(height: 10),
-                              actionButtons,
-                            ],
+                            const SizedBox(height: 10),
+                            actionButtons,
                           ],
                         );
                       }
@@ -191,13 +184,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(child: depotDropdown),
-                          if (isDepotSelected) ...[
-                            const SizedBox(width: 12),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 24),
-                              child: actionButtons,
-                            ),
-                          ],
+                          const SizedBox(width: 12),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 24),
+                            child: actionButtons,
+                          ),
                         ],
                       );
                     },

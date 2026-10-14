@@ -21,7 +21,7 @@ class AMSUpdateScreen extends StatefulWidget {
 }
 
 class _AMSUpdateScreenState extends State<AMSUpdateScreen> {
-  String depot = 'Uppal', track = '', line = '';
+  String depot = 'Select Depot', track = '', line = '';
   bool hasExistingData = false, isOutward = false, isSaving = false;
   int selectedMbId = 0, selectedSlotId = 1, selectedHistoryIndex = -1;
   int selectedTrainSet = 0, selectedStatus = 0, selectedPurpose = 0;
@@ -40,7 +40,9 @@ class _AMSUpdateScreenState extends State<AMSUpdateScreen> {
       context.read<StatusProvider>().fetchStatuses();
       context.read<MaintenancePurposeProvider>().fetchMaintenancePurposes();
       context.read<TrainProvider>().fetchTrainSets(token: ld?.token, userSession: ld?.encodedUserSession, roleId: roleId);
-      context.read<MaintenanceBayProvider>().fetchMaintenanceBay(AmsUpdateService.depotIds[depot] ?? 633);
+      if (depot != 'Select Depot') {
+        context.read<MaintenanceBayProvider>().fetchMaintenanceBay(AmsUpdateService.depotIds[depot] ?? 633);
+      }
     });
   }
 
@@ -55,7 +57,9 @@ class _AMSUpdateScreenState extends State<AMSUpdateScreen> {
       depot = newDepot;
       _clearForm();
     });
-    context.read<MaintenanceBayProvider>().fetchMaintenanceBay(AmsUpdateService.depotIds[newDepot] ?? 633);
+    if (newDepot != 'Select Depot') {
+      context.read<MaintenanceBayProvider>().fetchMaintenanceBay(AmsUpdateService.depotIds[newDepot] ?? 633);
+    }
   }
 
   void _onTrackChanged(String newTrack) {
@@ -162,9 +166,33 @@ class _AMSUpdateScreenState extends State<AMSUpdateScreen> {
   }
 
   Future<void> _handleSave() async {
-    if (track.isEmpty || selectedTrainSet == 0 || selectedStatus == 0 || selectedPurpose == 0) {
+    if (depot == 'Select Depot' || depot.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all required fields.'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Please select a Depot first.'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    if (track.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a Bay / Track.'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    if (selectedTrainSet == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a Train Set.'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    if (selectedStatus == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a Maintenance Status.'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    if (selectedPurpose == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a Maintenance Purpose.'), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -234,13 +262,18 @@ class _AMSUpdateScreenState extends State<AMSUpdateScreen> {
     statusOptions = AmsUpdateService.buildStatusOptions(sp.statuses, selectedStatus);
     purposeOptions = AmsUpdateService.buildPurposeOptions(pp.purposes, selectedPurpose);
     final bayOptions = AmsUpdateService.buildBayOptions(depot, bp);
-    final isSaveDisabled = isSaving || track.isEmpty || selectedTrainSet == 0 || selectedStatus == 0 || selectedPurpose == 0;
+    final isSaveDisabled = isSaving;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-      body: Column(
+    return ColoredBox(
+      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+      child: Column(
         children: [
-          CustomHeader(title: "AMS UPDATE", subtitle: "$depot Depot - Track Allocation"),
+          CustomHeader(
+            title: "AMS UPDATE",
+            subtitle: depot == 'Select Depot'
+                ? "Track Allocation Overview"
+                : "$depot Depot - Track Allocation",
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),

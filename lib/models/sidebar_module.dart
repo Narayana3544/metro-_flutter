@@ -6,7 +6,7 @@ class SidebarModule {
   final String subtitle;
   final IconData icon;
   final Color color;
-  final Widget page;
+  final Widget Function() pageBuilder;
 
   const SidebarModule({
     required this.id,
@@ -14,6 +14,8 @@ class SidebarModule {
     required this.subtitle,
     required this.icon,
     required this.color,
-    required this.page,
+    required this.pageBuilder,
   });
+
+  Widget get page => pageBuilder();
 }

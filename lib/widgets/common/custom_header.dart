@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../utils/scaffold_keys.dart';
 
 class CustomHeader extends StatelessWidget {
   final String title;
@@ -59,20 +58,10 @@ class CustomHeader extends StatelessWidget {
                       return;
                     }
 
-                    // 2. Fall back to module scaffold keys
-                    if (AppScaffoldKeys.wheelKey.currentState?.hasDrawer ?? false) {
-                      AppScaffoldKeys.wheelKey.currentState!.openDrawer();
-                    } else if (AppScaffoldKeys.mainKey.currentState?.hasDrawer ?? false) {
-                      AppScaffoldKeys.mainKey.currentState!.openDrawer();
-                    } else if (AppScaffoldKeys.checklistKey.currentState?.hasDrawer ?? false) {
-                      AppScaffoldKeys.checklistKey.currentState!.openDrawer();
-                    } else if (AppScaffoldKeys.meterKey.currentState?.hasDrawer ?? false) {
-                      AppScaffoldKeys.meterKey.currentState!.openDrawer();
-                    } else {
-                      try {
-                        Scaffold.of(ctx).openDrawer();
-                      } catch (_) {}
-                    }
+                    // 2. Fall back to nearest Scaffold if available
+                    try {
+                      Scaffold.maybeOf(ctx)?.openDrawer();
+                    } catch (_) {}
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(

@@ -72,18 +72,23 @@ class AddEditChecklistFields extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: _inputBoxDeco(colors, isDark),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: categories.any((c) => c.code == selectedCategoryId) ? selectedCategoryId : null,
-              hint: Text('Select Category', style: TextStyle(color: colors.outline, fontSize: 13)),
-              items: categories.map((cat) {
-                return DropdownMenuItem<String>(
-                  value: cat.code,
-                  child: Text(cat.value, style: const TextStyle(fontSize: 13)),
-                );
-              }).toList(),
-              onChanged: onCategoryChanged,
-            ),
+            child: () {
+              final seenCat = <String>{};
+              final uniqueCats = categories.where((c) => seenCat.add(c.code)).toList();
+              final isValValid = uniqueCats.any((c) => c.code == selectedCategoryId);
+              return DropdownButton<String>(
+                isExpanded: true,
+                value: isValValid ? selectedCategoryId : null,
+                hint: Text('Select Category', style: TextStyle(color: colors.outline, fontSize: 13)),
+                items: uniqueCats.map((cat) {
+                  return DropdownMenuItem<String>(
+                    value: cat.code,
+                    child: Text(cat.value, style: const TextStyle(fontSize: 13)),
+                  );
+                }).toList(),
+                onChanged: onCategoryChanged,
+              );
+            }(),
           ),
         ),
 
@@ -97,18 +102,23 @@ class AddEditChecklistFields extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: _inputBoxDeco(colors, isDark),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: jobPlans.any((j) => j.jobPlanId.toString() == selectedJobPlanId) ? selectedJobPlanId : null,
-              hint: Text('Select Jobplan', style: TextStyle(color: colors.outline, fontSize: 13)),
-              items: jobPlans.map((jp) {
-                return DropdownMenuItem<String>(
-                  value: jp.jobPlanId.toString(),
-                  child: Text(jp.jobPlanName, style: const TextStyle(fontSize: 13)),
-                );
-              }).toList(),
-              onChanged: onJobPlanChanged,
-            ),
+            child: () {
+              final seenJp = <String>{};
+              final uniqueJps = jobPlans.where((j) => seenJp.add(j.jobPlanId.toString())).toList();
+              final isValValid = uniqueJps.any((j) => j.jobPlanId.toString() == selectedJobPlanId);
+              return DropdownButton<String>(
+                isExpanded: true,
+                value: isValValid ? selectedJobPlanId : null,
+                hint: Text('Select Jobplan', style: TextStyle(color: colors.outline, fontSize: 13)),
+                items: uniqueJps.map((jp) {
+                  return DropdownMenuItem<String>(
+                    value: jp.jobPlanId.toString(),
+                    child: Text(jp.jobPlanName, style: const TextStyle(fontSize: 13)),
+                  );
+                }).toList(),
+                onChanged: onJobPlanChanged,
+              );
+            }(),
           ),
         ),
 

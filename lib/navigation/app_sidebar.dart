@@ -51,7 +51,7 @@ class AppSidebar extends StatelessWidget {
                           if (currentModule != module.id) {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (_) => module.page),
+                              MaterialPageRoute(builder: (_) => module.pageBuilder()),
                             );
                           } else {
                             Navigator.pop(context);

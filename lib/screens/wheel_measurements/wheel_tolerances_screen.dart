@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/wheel_measurement_model.dart';
-import '../../utils/scaffold_keys.dart';
 import '../../widgets/common/custom_header.dart';
 import '../../widgets/wheel_measurements/wheel_tolerance_widgets.dart';
 
@@ -33,10 +32,9 @@ class WheelTolerancesScreen extends StatelessWidget {
       color: theme.colorScheme.surface,
       child: Column(
         children: [
-          CustomHeader(
+          const CustomHeader(
             title: "WHEEL TOLERANCES",
             subtitle: "NxAMS Acceptability Standards & Criteria",
-            onMenuPressed: () => AppScaffoldKeys.wheelKey.currentState?.openDrawer(),
           ),
           Expanded(
             child: ListView(

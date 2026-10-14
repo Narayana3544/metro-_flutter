@@ -7,7 +7,6 @@ import '../providers/profile_provider.dart';
 import '../screens/maintenance-bay/dashboard_screen.dart';
 import '../screens/maintenance-bay/ams_update_screen.dart';
 import '../screens/maintenance-bay/history_screen.dart';
-import '../utils/scaffold_keys.dart';
 import 'app_sidebar.dart';
 
 class MaintenanceBayNavigationScreen extends StatefulWidget {
@@ -21,6 +20,7 @@ class MaintenanceBayNavigationScreen extends StatefulWidget {
 class _MaintenanceBayNavigationScreenState
     extends State<MaintenanceBayNavigationScreen> {
   int currentIndex = 0;
+  String currentDepot = 'Uppal';
 
   @override
   void initState() {
@@ -45,16 +45,24 @@ class _MaintenanceBayNavigationScreenState
     });
   }
 
-  final List<Widget> screens = const [
-    DashboardScreen(),
-    AMSUpdateScreen(),
-    HistoryScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      DashboardScreen(
+        onNavigateToHistory: (depot) {
+          setState(() {
+            if (depot.isNotEmpty && depot != 'Select Depot') {
+              currentDepot = depot;
+            }
+            currentIndex = 2; // Switch to History tab!
+          });
+        },
+      ),
+      const AMSUpdateScreen(),
+      HistoryScreen(initialDepot: currentDepot),
+    ];
+
     return Scaffold(
-      key: AppScaffoldKeys.mainKey,
       drawer: const AppSidebar(currentModule: 'ams'),
       body: IndexedStack(index: currentIndex, children: screens),
 

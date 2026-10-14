@@ -28,10 +28,7 @@ class DepotMap extends StatefulWidget {
 class _DepotMapState extends State<DepotMap>
     with SingleTickerProviderStateMixin {
   final TransformationController _controller = TransformationController();
-  late final AnimationController _animController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 450),
-  );
+  late AnimationController _animController;
   Animation<Matrix4>? _matrixAnimation;
 
   final GlobalKey _mapKey = GlobalKey();
@@ -70,6 +67,10 @@ class _DepotMapState extends State<DepotMap>
   @override
   void initState() {
     super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
